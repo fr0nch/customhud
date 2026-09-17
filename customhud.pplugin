@@ -1,12 +1,12 @@
 {
 	"$schema": "https://raw.githubusercontent.com/untrustedmodders/plugify/refs/heads/main/schemas/plugin.schema.json",
 	"version": "0.3.0",
-	"name": "cs2_panorama_api",
+	"name": "customhud",
 	"description": "Bridge to CS Script for controlling custom_hud_layout from plugins in any language",
 	"author": "Fr4nch",
 	"website": "https://github.com/fr0nch",
 	"license": "GPLv3",
-	"entry": "cs2_panorama_api.PanoramaAPI",
+	"entry": "customhud.CustomHud",
 	"platforms": [],
 	"language": "javascript",
 	"dependencies": [

@@ -1,7 +1,7 @@
 import { Plugin } from 'plugify';
 import * as s2sdk from ':s2sdk';
 
-const pluginTag = "PanoramaAPI"
+const pluginTag = "CustomHud"
 
 let scriptReady = false;
 let csScript = null;
@@ -67,7 +67,7 @@ function OnMapEnd() {
 	huds.clear();
 }
 
-export class PanoramaAPI extends Plugin {
+export class CustomHud extends Plugin {
 	pluginStart() {
 		s2sdk.OnMapEnd_Register(OnMapEnd)
 		s2sdk.OnEntitySpawned_Register(onEntitySpawned);
