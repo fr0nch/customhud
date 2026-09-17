@@ -1,6 +1,6 @@
 [![Русский](https://img.shields.io/badge/Русский-%F0%9F%87%B7%F0%9F%87%BA-green?style=for-the-badge)](README_ru.md)
 
-# CS2 Panorama API
+# CS2 Custom Hud API
 
 A [Plugify](https://github.com/untrustedmodders/plugify) plugin that lets other plugins (any language: Go, C++, Python, JS) control a custom HUD (`custom_hud_layout`) in CS2.
 

@@ -1,6 +1,6 @@
 [![English](https://img.shields.io/badge/English-%F0%9F%87%AC%F0%9F%87%A7-blue?style=for-the-badge)](README.md)
 
-# CS2 Panorama API
+# CS2 Custom Hud API
 
 [English](README.md) | **Русский**
 
