@@ -375,6 +375,48 @@
 			"group": "CustomHudLayout"
 		},
 		{
+			"name": "ResetHud",
+			"description": "Reset to original state for all players. (CustomHudLayout.Reset)",
+			"funcName": "ResetHud",
+			"paramTypes": [
+				{
+					"name": "name",
+					"type": "string",
+					"ref": false,
+					"description": "Name passed to CreateCustomHud."
+				}
+			],
+			"retType": {
+				"type": "bool",
+				"description": "False if the entity isn't found or CS Script isn't ready."
+			},
+			"group": "CustomHudLayout"
+		},
+		{
+			"name": "ResetHudForPlayer",
+			"description": "Reset a single player's overrides to their original state. (CustomHudLayout.ResetForPlayer)",
+			"funcName": "ResetHudForPlayer",
+			"paramTypes": [
+				{
+					"name": "name",
+					"type": "string",
+					"ref": false,
+					"description": "Name passed to CreateCustomHud."
+				},
+				{
+					"name": "playerSlot",
+					"type": "int32",
+					"ref": false,
+					"description": "Player slot whose overrides are reset."
+				}
+			],
+			"retType": {
+				"type": "bool",
+				"description": "False if the entity isn't found or CS Script isn't ready."
+			},
+			"group": "CustomHudLayout"
+		},
+		{
 			"name": "OnHudClicked_Register",
 			"description": "Subscribes to button clicks on all huds created via CreateCustomHud. Replaces a separate cs_script relay and ServerCommand: the click arrives directly in this plugin through Instance.OnCustomHudClicked.",
 			"funcName": "OnHudClicked_Register",

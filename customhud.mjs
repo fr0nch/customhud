@@ -218,6 +218,16 @@ export const SetHudInputCapture = hudSetter('SetInputCaptureEnabled');
 export const IsHudInputCaptureEnabled = hudGetter('IsInputCaptureEnabled', false);
 
 /**
+ * Reset to original state for all players.
+ */
+export const ResetHud = hudSetter('Reset');
+
+/**
+ * Reset a single player's overrides to their original state.
+ */
+export const ResetHudForPlayer = hudSetter('ResetForPlayer');
+
+/**
  * Subscribes a callback to clicks on any button of any hud created via
  * CreateCustomHud. Called as (playerSlot, hudName, buttonId).
  */
