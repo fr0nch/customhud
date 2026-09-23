@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.0](https://github.com/fr0nch/customhud/compare/v0.3.1...v0.4.0) (2026-09-23)
+
+
+### Features
+
+* add new methods ([352afc1](https://github.com/fr0nch/customhud/commit/352afc13ea9c6f84180dbe42016ab2ec1bfc23df))
+
+
+### Bug Fixes
+
+* README ([d4d8e1d](https://github.com/fr0nch/customhud/commit/d4d8e1d9b1f106cbebe534c8750b90f5fe331407))
+
 ## [0.3.1](https://github.com/fr0nch/cs2-panorama-api/compare/v0.3.0...v0.3.1) (2026-09-17)
 
 
