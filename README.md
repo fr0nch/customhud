@@ -53,6 +53,8 @@ OnHudClicked_Register((playerSlot, hudName, buttonId) => {
 | `SetHudDialogVariableForPlayer(name, playerSlot, panelId, variableName, value)` | Same, but for one player only. |
 | `SetHudInputCapture(name, playerSlot, enabled)` | Turns a player's cursor/clicks on the hud on or off. |
 | `IsHudInputCaptureEnabled(name, playerSlot)` | Whether a player's input is currently captured. |
+| `ResetHud(name)` | Resets the hud to its original state for all players. |
+| `ResetHudForPlayer(name, playerSlot)` | Resets one player's overrides to the original state. |
 | `OnHudClicked_Register(callback)` | Subscribes to button clicks on a hud. |
 | `OnHudClicked_Unregister(callback)` | Unsubscribes from clicks. |
 

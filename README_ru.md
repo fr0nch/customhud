@@ -55,6 +55,8 @@ OnHudClicked_Register((playerSlot, hudName, buttonId) => {
 | `SetHudDialogVariableForPlayer(name, playerSlot, panelId, variableName, value)` | То же самое, но только для одного игрока. |
 | `SetHudInputCapture(name, playerSlot, enabled)` | Включает/выключает курсор и клики для игрока. |
 | `IsHudInputCaptureEnabled(name, playerSlot)` | Захвачен ли сейчас ввод игрока. |
+| `ResetHud(name)` | Сбрасывает худ в исходное состояние для всех игроков. |
+| `ResetHudForPlayer(name, playerSlot)` | Сбрасывает переопределения одного игрока. |
 | `OnHudClicked_Register(callback)` | Подписка на клики по кнопкам худа. |
 | `OnHudClicked_Unregister(callback)` | Отписка от кликов. |
 
