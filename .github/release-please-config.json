@@ -6,7 +6,7 @@
 			"extra-files": [
 				{
 					"type": "json",
-					"path": "cs2_panorama_api.pplugin",
+					"path": "customhud.pplugin",
 					"jsonpath": "$.version"
 				}
 			]

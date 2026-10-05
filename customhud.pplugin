@@ -1,6 +1,6 @@
 {
 	"$schema": "https://raw.githubusercontent.com/untrustedmodders/plugify/refs/heads/main/schemas/plugin.schema.json",
-	"version": "0.3.0",
+	"version": "0.4.0",
 	"name": "customhud",
 	"description": "Bridge to CS Script for controlling custom_hud_layout from plugins in any language",
 	"author": "Fr4nch",
@@ -11,7 +11,8 @@
 	"language": "javascript",
 	"dependencies": [
 		{
-			"name": "s2sdk"
+			"name": "s2sdk",
+			"constraints": ">=2.18.0"
 		}
 	],
 	"prototypes": [
@@ -35,9 +36,9 @@
 					"description": "Slot of the player who clicked."
 				},
 				{
-					"name": "name",
-					"type": "string",
-					"description": "Hud name passed to CreateCustomHud."
+					"name": "hud",
+					"type": "int32",
+					"description": "Handle of the clicked hud."
 				},
 				{
 					"name": "buttonId",
@@ -100,14 +101,14 @@
 		},
 		{
 			"name": "CreateCustomHud",
-			"description": "Creates a custom_hud_layout entity with the given Panorama layout. cs_script cannot spawn entities, so creation goes through s2sdk.",
+			"description": "Creates a custom_hud_layout entity with the given Panorama layout and returns its handle. The handle is used for all further calls to this hud and stays valid until the hud is removed or the map changes. cs_script cannot spawn entities, so creation goes through s2sdk.",
 			"funcName": "CreateCustomHud",
 			"paramTypes": [
 				{
 					"name": "name",
 					"type": "string",
 					"ref": false,
-					"description": "Name (targetname) used for all further calls to this hud."
+					"description": "Name (targetname) of the hud. Does not have to be unique."
 				},
 				{
 					"name": "layoutResource",
@@ -117,39 +118,57 @@
 				}
 			],
 			"retType": {
-				"type": "bool",
-				"description": "False if the engine doesn't know the custom_hud_layout class."
+				"type": "int32",
+				"description": "Hud handle, or -1 if the hud could not be created."
+			},
+			"group": "CustomHudLayout"
+		},
+		{
+			"name": "FindCustomHud",
+			"description": "Gets the handle of the first hud with this name (targetname), such as a hud placed on the map.",
+			"funcName": "FindCustomHud",
+			"paramTypes": [
+				{
+					"name": "name",
+					"type": "string",
+					"ref": false,
+					"description": "The hud's targetname."
+				}
+			],
+			"retType": {
+				"type": "int32",
+				"description": "Hud handle, or -1 if there is no hud with this name."
 			},
 			"group": "CustomHudLayout"
 		},
 		{
 			"name": "RemoveCustomHud",
-			"description": "Removes a previously created custom_hud_layout.",
+			"description": "Removes a hud.",
 			"funcName": "RemoveCustomHud",
 			"paramTypes": [
 				{
-					"name": "name",
-					"type": "string",
+					"name": "hud",
+					"type": "int32",
 					"ref": false,
-					"description": "Name passed to CreateCustomHud."
+					"description": "Hud handle from CreateCustomHud or FindCustomHud."
 				}
 			],
 			"retType": {
 				"type": "bool",
-				"description": "False if no hud with this name was created by this plugin."
+				"description": "False if the handle isn't a hud."
 			},
 			"group": "CustomHudLayout"
 		},
 		{
 			"name": "HideCustomHudFromOtherPlayers",
-			"description": "Hides the hud entity from all players except the owner, at the transmit/PVS level — a stronger guarantee than a CSS class, which only hides the panel on clients the entity is still transmitted to. (s2sdk.HideTransmitEntityFromOtherPlayers)",
+			"description": "Hides the hud entity from all players except the owner, at the transmit/PVS level. A stronger guarantee than a CSS class, which only hides the panel on clients the entity is still transmitted to. (s2sdk.HideTransmitEntityFromOtherPlayers)",
 			"funcName": "HideCustomHudFromOtherPlayers",
 			"paramTypes": [
 				{
-					"name": "name",
-					"type": "string",
+					"name": "hud",
+					"type": "int32",
 					"ref": false,
-					"description": "Name passed to CreateCustomHud."
+					"description": "Hud handle from CreateCustomHud or FindCustomHud."
 				},
 				{
 					"name": "playerSlot",
@@ -160,20 +179,20 @@
 			],
 			"retType": {
 				"type": "bool",
-				"description": "False if no hud with this name was created by this plugin."
+				"description": "False if the handle isn't a hud."
 			},
 			"group": "CustomHudLayout"
 		},
 		{
 			"name": "SetHudHasClass",
-			"description": "Set if a panel has a class. Applies to all players. Omit `hasClass` to revert to the original value. (CustomHudLayout.SetHasClass)",
+			"description": "Set if a panel has a class. Applies to all players. (CustomHudLayout.SetHasClass)",
 			"funcName": "SetHudHasClass",
 			"paramTypes": [
 				{
-					"name": "name",
-					"type": "string",
+					"name": "hud",
+					"type": "int32",
 					"ref": false,
-					"description": "Name passed to CreateCustomHud."
+					"description": "Hud handle from CreateCustomHud or FindCustomHud."
 				},
 				{
 					"name": "panelId",
@@ -196,7 +215,37 @@
 			],
 			"retType": {
 				"type": "bool",
-				"description": "False if the entity isn't found or CS Script isn't ready."
+				"description": "False if the handle isn't a hud, CS Script isn't ready or the call failed."
+			},
+			"group": "CustomHudLayout"
+		},
+		{
+			"name": "ResetHudHasClass",
+			"description": "Revert a panel's class to the original value from the layout. Applies to all players. (CustomHudLayout.SetHasClass without hasClass)",
+			"funcName": "ResetHudHasClass",
+			"paramTypes": [
+				{
+					"name": "hud",
+					"type": "int32",
+					"ref": false,
+					"description": "Hud handle from CreateCustomHud or FindCustomHud."
+				},
+				{
+					"name": "panelId",
+					"type": "string",
+					"ref": false,
+					"description": "The panel's id attribute in the layout."
+				},
+				{
+					"name": "className",
+					"type": "string",
+					"ref": false,
+					"description": "CSS class."
+				}
+			],
+			"retType": {
+				"type": "bool",
+				"description": "False if the handle isn't a hud, CS Script isn't ready or the call failed."
 			},
 			"group": "CustomHudLayout"
 		},
@@ -206,10 +255,10 @@
 			"funcName": "SetHudDialogVariable",
 			"paramTypes": [
 				{
-					"name": "name",
-					"type": "string",
+					"name": "hud",
+					"type": "int32",
 					"ref": false,
-					"description": "Name passed to CreateCustomHud."
+					"description": "Hud handle from CreateCustomHud or FindCustomHud."
 				},
 				{
 					"name": "panelId",
@@ -232,20 +281,20 @@
 			],
 			"retType": {
 				"type": "bool",
-				"description": "False if the entity isn't found or CS Script isn't ready."
+				"description": "False if the handle isn't a hud, CS Script isn't ready or the call failed."
 			},
 			"group": "CustomHudLayout"
 		},
 		{
 			"name": "SetHudHasClassForPlayer",
-			"description": "Set if a panel has a class for a single player. Will override the all player value. Omit `hasClass` to defer to the all player value. (CustomHudLayout.SetHasClassForPlayer)",
+			"description": "Set if a panel has a class for a single player. Will override the all player value. (CustomHudLayout.SetHasClassForPlayer)",
 			"funcName": "SetHudHasClassForPlayer",
 			"paramTypes": [
 				{
-					"name": "name",
-					"type": "string",
+					"name": "hud",
+					"type": "int32",
 					"ref": false,
-					"description": "Name passed to CreateCustomHud."
+					"description": "Hud handle from CreateCustomHud or FindCustomHud."
 				},
 				{
 					"name": "playerSlot",
@@ -274,20 +323,128 @@
 			],
 			"retType": {
 				"type": "bool",
-				"description": "False if the entity isn't found or CS Script isn't ready."
+				"description": "False if the handle isn't a hud, CS Script isn't ready or the call failed."
+			},
+			"group": "CustomHudLayout"
+		},
+		{
+			"name": "ResetHudHasClassForPlayer",
+			"description": "Remove a single player's value of a panel's class, so the all player value applies again. (CustomHudLayout.SetHasClassForPlayer without hasClass)",
+			"funcName": "ResetHudHasClassForPlayer",
+			"paramTypes": [
+				{
+					"name": "hud",
+					"type": "int32",
+					"ref": false,
+					"description": "Hud handle from CreateCustomHud or FindCustomHud."
+				},
+				{
+					"name": "playerSlot",
+					"type": "int32",
+					"ref": false,
+					"description": "Player slot the override applies to."
+				},
+				{
+					"name": "panelId",
+					"type": "string",
+					"ref": false,
+					"description": "The panel's id attribute in the layout."
+				},
+				{
+					"name": "className",
+					"type": "string",
+					"ref": false,
+					"description": "CSS class."
+				}
+			],
+			"retType": {
+				"type": "bool",
+				"description": "False if the handle isn't a hud, CS Script isn't ready or the call failed."
+			},
+			"group": "CustomHudLayout"
+		},
+		{
+			"name": "BHasClass",
+			"description": "Get if a panel has a class for a player. The player value is used if set, otherwise the all player value. Classes from the layout file are not known to the server and are not reported. (Panel.BHasClass)",
+			"funcName": "BHasClass",
+			"paramTypes": [
+				{
+					"name": "hud",
+					"type": "int32",
+					"ref": false,
+					"description": "Hud handle from CreateCustomHud or FindCustomHud."
+				},
+				{
+					"name": "playerSlot",
+					"type": "int32",
+					"ref": false,
+					"description": "Player slot, or -1 for the all player value."
+				},
+				{
+					"name": "panelId",
+					"type": "string",
+					"ref": false,
+					"description": "The panel's id attribute in the layout."
+				},
+				{
+					"name": "className",
+					"type": "string",
+					"ref": false,
+					"description": "CSS class."
+				}
+			],
+			"retType": {
+				"type": "bool",
+				"description": "True if the class is set. False if it isn't, or the handle isn't a hud."
+			},
+			"group": "CustomHudLayout"
+		},
+		{
+			"name": "ToggleClass",
+			"description": "Toggle a class on a panel, based on the value reported by BHasClass. Pass -1 for `playerSlot` to toggle the all player value. (Panel.ToggleClass)",
+			"funcName": "ToggleClass",
+			"paramTypes": [
+				{
+					"name": "hud",
+					"type": "int32",
+					"ref": false,
+					"description": "Hud handle from CreateCustomHud or FindCustomHud."
+				},
+				{
+					"name": "playerSlot",
+					"type": "int32",
+					"ref": false,
+					"description": "Player slot, or -1 for the all player value."
+				},
+				{
+					"name": "panelId",
+					"type": "string",
+					"ref": false,
+					"description": "The panel's id attribute in the layout."
+				},
+				{
+					"name": "className",
+					"type": "string",
+					"ref": false,
+					"description": "CSS class."
+				}
+			],
+			"retType": {
+				"type": "bool",
+				"description": "False if the handle isn't a hud, CS Script isn't ready or the call failed."
 			},
 			"group": "CustomHudLayout"
 		},
 		{
 			"name": "SetHudDialogVariableForPlayer",
-			"description": "Set the value of a dialog variable for a single player. Will override the all player value. Omit `value` to defer to the all player value. If no all player value has been set, the value will be an empty string. (CustomHudLayout.SetDialogVariableStringForPlayer)",
+			"description": "Set the value of a dialog variable for a single player. Will override the all player value. (CustomHudLayout.SetDialogVariableStringForPlayer)",
 			"funcName": "SetHudDialogVariableForPlayer",
 			"paramTypes": [
 				{
-					"name": "name",
-					"type": "string",
+					"name": "hud",
+					"type": "int32",
 					"ref": false,
-					"description": "Name passed to CreateCustomHud."
+					"description": "Hud handle from CreateCustomHud or FindCustomHud."
 				},
 				{
 					"name": "playerSlot",
@@ -316,7 +473,43 @@
 			],
 			"retType": {
 				"type": "bool",
-				"description": "False if the entity isn't found or CS Script isn't ready."
+				"description": "False if the handle isn't a hud, CS Script isn't ready or the call failed."
+			},
+			"group": "CustomHudLayout"
+		},
+		{
+			"name": "ResetHudDialogVariableForPlayer",
+			"description": "Remove a single player's value of a dialog variable, so the all player value applies again. If no all player value has been set, the value will be an empty string. (CustomHudLayout.SetDialogVariableStringForPlayer without value)",
+			"funcName": "ResetHudDialogVariableForPlayer",
+			"paramTypes": [
+				{
+					"name": "hud",
+					"type": "int32",
+					"ref": false,
+					"description": "Hud handle from CreateCustomHud or FindCustomHud."
+				},
+				{
+					"name": "playerSlot",
+					"type": "int32",
+					"ref": false,
+					"description": "Player slot the override applies to."
+				},
+				{
+					"name": "panelId",
+					"type": "string",
+					"ref": false,
+					"description": "The panel's id attribute in the layout."
+				},
+				{
+					"name": "variableName",
+					"type": "string",
+					"ref": false,
+					"description": "Variable name."
+				}
+			],
+			"retType": {
+				"type": "bool",
+				"description": "False if the handle isn't a hud, CS Script isn't ready or the call failed."
 			},
 			"group": "CustomHudLayout"
 		},
@@ -326,10 +519,10 @@
 			"funcName": "SetHudInputCapture",
 			"paramTypes": [
 				{
-					"name": "name",
-					"type": "string",
+					"name": "hud",
+					"type": "int32",
 					"ref": false,
-					"description": "Name passed to CreateCustomHud."
+					"description": "Hud handle from CreateCustomHud or FindCustomHud."
 				},
 				{
 					"name": "playerSlot",
@@ -346,7 +539,7 @@
 			],
 			"retType": {
 				"type": "bool",
-				"description": "False if the entity isn't found or CS Script isn't ready."
+				"description": "False if the handle isn't a hud, CS Script isn't ready or the call failed."
 			},
 			"group": "CustomHudLayout"
 		},
@@ -356,10 +549,10 @@
 			"funcName": "IsHudInputCaptureEnabled",
 			"paramTypes": [
 				{
-					"name": "name",
-					"type": "string",
+					"name": "hud",
+					"type": "int32",
 					"ref": false,
-					"description": "Name passed to CreateCustomHud."
+					"description": "Hud handle from CreateCustomHud or FindCustomHud."
 				},
 				{
 					"name": "playerSlot",
@@ -370,7 +563,7 @@
 			],
 			"retType": {
 				"type": "bool",
-				"description": "False if the entity isn't found, CS Script isn't ready, or input isn't captured."
+				"description": "False if input isn't captured, the handle isn't a hud, CS Script isn't ready or the call failed."
 			},
 			"group": "CustomHudLayout"
 		},
@@ -380,15 +573,15 @@
 			"funcName": "ResetHud",
 			"paramTypes": [
 				{
-					"name": "name",
-					"type": "string",
+					"name": "hud",
+					"type": "int32",
 					"ref": false,
-					"description": "Name passed to CreateCustomHud."
+					"description": "Hud handle from CreateCustomHud or FindCustomHud."
 				}
 			],
 			"retType": {
 				"type": "bool",
-				"description": "False if the entity isn't found or CS Script isn't ready."
+				"description": "False if the handle isn't a hud, CS Script isn't ready or the call failed."
 			},
 			"group": "CustomHudLayout"
 		},
@@ -398,10 +591,10 @@
 			"funcName": "ResetHudForPlayer",
 			"paramTypes": [
 				{
-					"name": "name",
-					"type": "string",
+					"name": "hud",
+					"type": "int32",
 					"ref": false,
-					"description": "Name passed to CreateCustomHud."
+					"description": "Hud handle from CreateCustomHud or FindCustomHud."
 				},
 				{
 					"name": "playerSlot",
@@ -412,13 +605,13 @@
 			],
 			"retType": {
 				"type": "bool",
-				"description": "False if the entity isn't found or CS Script isn't ready."
+				"description": "False if the handle isn't a hud, CS Script isn't ready or the call failed."
 			},
 			"group": "CustomHudLayout"
 		},
 		{
 			"name": "OnHudClicked_Register",
-			"description": "Subscribes to button clicks on all huds created via CreateCustomHud. Replaces a separate cs_script relay and ServerCommand: the click arrives directly in this plugin through Instance.OnCustomHudClicked.",
+			"description": "Subscribes to button clicks on all huds. Replaces a separate cs_script relay and ServerCommand: the click arrives directly in this plugin through Instance.OnCustomHudClicked.",
 			"funcName": "OnHudClicked_Register",
 			"paramTypes": [
 				{
