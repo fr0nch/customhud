@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.0](https://github.com/fr0nch/customhud/compare/v0.4.0...v0.5.0) (2026-10-05)
+
+
+### Features
+
+* identify huds by handle instead of name ([dd289e8](https://github.com/fr0nch/customhud/commit/dd289e84aff531e0760264d991f70b7450a03333))
+
+
+### Bug Fixes
+
+* point release-please at customhud.pplugin ([563f1e6](https://github.com/fr0nch/customhud/commit/563f1e6b55cd01ca5099c8bb2156e360e95ed1cc))
+
 ## [0.4.0](https://github.com/fr0nch/customhud/compare/v0.3.1...v0.4.0) (2026-09-23)
 
 
