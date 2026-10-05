@@ -5559,6 +5559,12 @@ declare module ":s2sdk" {
   export function GetNextActiveEntity(entityHandle: number): number;
 
   /**
+   * Retrieves the handle of the point_script entity created by s2sdk.
+   * @returns The entity handle as an integer, or INVALID_EHANDLE_INDEX if the entity does not exist.
+   */
+  export function GetPointScriptHandle(): number;
+
+  /**
    * Adds an entity output hook on a specified entity class name.
    * @param classname - The class name of the entity to hook the output for.
    * @param output - The output event name to hook.
@@ -7620,6 +7626,14 @@ declare module ":s2sdk" {
   export function SetEntDataEnt2(entity: bigint, offset: number, value: number, changeState: boolean, chainOffset: number): void;
 
   /**
+   * Peeks into an entity's object data and retrieves a pointer to the data at the given offset.
+   * @param entity - Pointer to the instance of the class where the value is to be retrieved.
+   * @param offset - The offset of the schema to use.
+   * @returns A pointer to the data at the given memory location.
+   */
+  export function GetEntDataPtr2(entity: bigint, offset: number): bigint;
+
+  /**
    * Updates the networked state of a schema field for a given entity pointer.
    * @param entity - Pointer to the instance of the class where the value is to be set.
    * @param offset - The offset of the schema to use.
@@ -7796,6 +7810,14 @@ declare module ":s2sdk" {
   export function SetEntDataEnt(entityHandle: number, offset: number, value: number, changeState: boolean, chainOffset: number): void;
 
   /**
+   * Peeks into an entity's object data and retrieves a pointer to the data at the given offset.
+   * @param entityHandle - The handle of the entity from which the value is to be retrieved.
+   * @param offset - The offset of the schema to use.
+   * @returns A pointer to the data at the given memory location.
+   */
+  export function GetEntDataPtr(entityHandle: number, offset: number): bigint;
+
+  /**
    * Updates the networked state of a schema field for a given entity handle.
    * @param entityHandle - The handle of the entity from which the value is to be retrieved.
    * @param offset - The offset of the schema to use.
@@ -7811,6 +7833,16 @@ declare module ":s2sdk" {
    * @returns Size of array (in elements) or 0 if schema is not an array.
    */
   export function GetEntSchemaArraySize2(entity: bigint, className: string, memberName: string): number;
+
+  /**
+   * Retrieves a pointer to a structure or an array element in an entity's schema.
+   * @param entity - Pointer to the instance of the class where the value is to be retrieved.
+   * @param className - The name of the class.
+   * @param memberName - The name of the schema member.
+   * @param element - Element # (starting from 0) if schema is an array.
+   * @returns A pointer to the field or element, or nullptr if the field is not found or element is out of range.
+   */
+  export function GetEntSchemaPtr2(entity: bigint, className: string, memberName: string, element: number): bigint;
 
   /**
    * Retrieves an integer value from an entity's schema.
@@ -8016,6 +8048,16 @@ declare module ":s2sdk" {
    * @returns Size of array (in elements) or 0 if schema is not an array.
    */
   export function GetEntSchemaArraySize(entityHandle: number, className: string, memberName: string): number;
+
+  /**
+   * Retrieves a pointer to a structure or an array element in an entity's schema.
+   * @param entityHandle - The handle of the entity from which the value is to be retrieved.
+   * @param className - The name of the class.
+   * @param memberName - The name of the schema member.
+   * @param element - Element # (starting from 0) if schema is an array.
+   * @returns A pointer to the field or element, or nullptr if the field is not found or element is out of range.
+   */
+  export function GetEntSchemaPtr(entityHandle: number, className: string, memberName: string, element: number): bigint;
 
   /**
    * Retrieves an integer value from an entity's schema.
