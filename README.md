@@ -11,29 +11,28 @@ This plugin takes care of that for you: it creates the hud through `s2sdk`, trac
 
 ## Requirements
 
-- [Source 2 SDK](https://github.com/untrustedmodders/plugify) plugin
+- [Source 2 SDK](https://github.com/untrustedmodders/plugify) plugin 2.18.0 or newer
 - [V8 language module for JavaScript](https://github.com/untrustedmodders/plugify)
 
 ## Usage
 
 ```js
 // From any Plugify plugin. Everything below needs cs_script, so it all
-// waits for OnCsScriptReady_Register — it fires immediately if already ready.
+// waits for OnCsScriptReady_Register. It fires immediately if already ready.
 OnCsScriptReady_Register(() => {
-	CreateCustomHud('main_hud', 'panorama/layout/custom_game/main_hud.vxml');
+	const hud = CreateCustomHud('main_hud', 'panorama/layout/custom_game/main_hud.vxml');
 
-	// The panel doesn't appear right away. Call at least one Set* method
-	// before expecting a player to see it:
-	SetHudHasClass('main_hud', 'dialog', 'Dismissed', false);
+	// Set a class for all players:
+	SetHudHasClass(hud, 'dialog', 'Dismissed', false);
 
 	// A per-player value overrides the shared one:
-	SetHudHasClassForPlayer('main_hud', playerSlot, 'dialog', 'Dismissed', true);
+	SetHudHasClassForPlayer(hud, playerSlot, 'dialog', 'Dismissed', true);
 
 	// Let a player click buttons on the hud:
-	SetHudInputCapture('main_hud', playerSlot, true);
+	SetHudInputCapture(hud, playerSlot, true);
 });
 
-OnHudClicked_Register((playerSlot, hudName, buttonId) => {
+OnHudClicked_Register((playerSlot, hud, buttonId) => {
 	// handle click
 });
 ```
@@ -44,17 +43,23 @@ OnHudClicked_Register((playerSlot, hudName, buttonId) => {
 | `IsCsScriptReady()` | Whether `cs_script` is ready. |
 | `OnCsScriptReady_Register(callback)` | Subscribes to `cs_script` becoming ready. Fires immediately if it already is. |
 | `OnCsScriptReady_Unregister(callback)` | Unsubscribes. |
-| `CreateCustomHud(name, layoutResource)` | Creates a hud. |
-| `RemoveCustomHud(name)` | Removes a hud. |
-| `HideCustomHudFromOtherPlayers(name, playerSlot)` | Hides the hud from everyone except `playerSlot`. |
-| `SetHudHasClass(name, panelId, className, hasClass)` | Adds/removes a CSS class on a panel, for all players. |
-| `SetHudHasClassForPlayer(name, playerSlot, panelId, className, hasClass)` | Same, but for one player only. |
-| `SetHudDialogVariable(name, panelId, variableName, value)` | Sets a panel variable, for all players. |
-| `SetHudDialogVariableForPlayer(name, playerSlot, panelId, variableName, value)` | Same, but for one player only. |
-| `SetHudInputCapture(name, playerSlot, enabled)` | Turns a player's cursor/clicks on the hud on or off. |
-| `IsHudInputCaptureEnabled(name, playerSlot)` | Whether a player's input is currently captured. |
-| `ResetHud(name)` | Resets the hud to its original state for all players. |
-| `ResetHudForPlayer(name, playerSlot)` | Resets one player's overrides to the original state. |
+| `CreateCustomHud(name, layoutResource)` | Creates a hud and returns its handle (`-1` on failure). All other methods take this handle. It stays valid until the hud is removed or the map changes. The name does not have to be unique. |
+| `FindCustomHud(name)` | Returns the handle of the first hud with this name, such as one placed on the map (`-1` if not found). |
+| `RemoveCustomHud(hud)` | Removes a hud. |
+| `HideCustomHudFromOtherPlayers(hud, playerSlot)` | Hides the hud from everyone except `playerSlot`. |
+| `SetHudHasClass(hud, panelId, className, hasClass)` | Adds/removes a CSS class on a panel, for all players. |
+| `ResetHudHasClass(hud, panelId, className)` | Reverts a panel's class to the original value from the layout, for all players. |
+| `SetHudHasClassForPlayer(hud, playerSlot, panelId, className, hasClass)` | Same, but for one player only. |
+| `ResetHudHasClassForPlayer(hud, playerSlot, panelId, className)` | Removes one player's value, so the shared one applies again. |
+| `BHasClass(hud, playerSlot, panelId, className)` | Whether a panel has a class for a player. The player value is used if set, otherwise the all player value (`-1` checks only the all player value). Classes from the layout `.xml` are not reported. |
+| `ToggleClass(hud, playerSlot, panelId, className)` | Toggles a class, based on `BHasClass`. `-1` toggles the all player value. |
+| `SetHudDialogVariable(hud, panelId, variableName, value)` | Sets a panel variable, for all players. |
+| `SetHudDialogVariableForPlayer(hud, playerSlot, panelId, variableName, value)` | Same, but for one player only. |
+| `ResetHudDialogVariableForPlayer(hud, playerSlot, panelId, variableName)` | Removes one player's value of a variable, so the shared one applies again. |
+| `SetHudInputCapture(hud, playerSlot, enabled)` | Turns a player's cursor/clicks on the hud on or off. |
+| `IsHudInputCaptureEnabled(hud, playerSlot)` | Whether a player's input is currently captured. |
+| `ResetHud(hud)` | Resets the hud to its original state for all players. |
+| `ResetHudForPlayer(hud, playerSlot)` | Resets one player's overrides to the original state. |
 | `OnHudClicked_Register(callback)` | Subscribes to button clicks on a hud. |
 | `OnHudClicked_Unregister(callback)` | Unsubscribes from clicks. |
 
