@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0](https://github.com/fr0nch/customhud/compare/v0.5.0...v1.0.0) (2026-10-17)
+
+
+### Features
+
+* publish conda channel ([b749e5d](https://github.com/fr0nch/customhud/commit/b749e5dc751e69a3a513594519088cd9f68377f5))
+
 ## [0.5.0](https://github.com/fr0nch/customhud/compare/v0.4.0...v0.5.0) (2026-10-05)
 
 
