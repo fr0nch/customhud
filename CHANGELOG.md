@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/fr0nch/customhud/compare/v1.0.0...v1.0.1) (2026-10-17)
+
+
+### Bug Fixes
+
+* publish noarch package to conda channel ([9d8fbb8](https://github.com/fr0nch/customhud/commit/9d8fbb8eeaadeb0995dea80b393af60d9502d06d))
+
 ## [1.0.0](https://github.com/fr0nch/customhud/compare/v0.5.0...v1.0.0) (2026-10-17)
 
 
