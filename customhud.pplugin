@@ -1,6 +1,6 @@
 {
 	"$schema": "https://raw.githubusercontent.com/untrustedmodders/plugify/refs/heads/main/schemas/plugin.schema.json",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"name": "customhud",
 	"description": "Bridge to CS Script for controlling custom_hud_layout from plugins in any language",
 	"author": "Fr4nch",
