@@ -1,0 +1,29 @@
+context:
+  name: customhud
+  version: ${{ env.get("PACKAGE_VERSION") }}
+
+package:
+  name: ${{ name }}
+  version: ${{ version }}
+
+source:
+  path: .
+  use_gitignore: false
+
+build:
+  number: 0
+  noarch: generic
+
+about:
+  homepage: https://github.com/${{ env.get("GITHUB_REPOSITORY", default="fr0nch/customhud") }}
+  license: MIT
+  license_file: LICENSE
+  summary: "Bridge to CS Script for controlling custom_hud_layout from plugins in any language"
+  description: |
+    Bridge to CS Script for controlling custom_hud_layout from plugins in any language
+  documentation: https://github.com/${{ env.get("GITHUB_REPOSITORY", default="fr0nch/customhud") }}/blob/main/README.md
+  repository: https://github.com/${{ env.get("GITHUB_REPOSITORY", default="fr0nch/customhud") }}
+
+extra:
+  recipe-maintainers:
+    - ${{ env.get("GITHUB_ACTOR", default="fr0nch") }}

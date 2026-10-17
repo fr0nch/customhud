@@ -5,7 +5,7 @@
 	"description": "Bridge to CS Script for controlling custom_hud_layout from plugins in any language",
 	"author": "Fr4nch",
 	"website": "https://github.com/fr0nch",
-	"license": "GPLv3",
+	"license": "MIT",
 	"entry": "customhud.CustomHud",
 	"platforms": [],
 	"language": "javascript",
