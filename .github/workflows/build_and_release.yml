@@ -216,18 +216,18 @@ jobs:
       - name: Organize conda packages
         shell: bash -el {0}
         run: |
-          # Move packages to correct structure
-          for dir in artifacts/conda-package-*; do
-            if [ -d "$dir" ]; then
-              platform=$(echo $dir | sed 's/.*conda-package-\(.*\)-.*/\1/')
-              mkdir -p build/repo/${platform}
-              mv $dir/* build/repo/${platform}/
-              rmdir $dir
-            fi
-          done
-          
-          # Create noarch directory
+          # download-artifact puts a single artifact directly into artifacts/, so sort by file name
           mkdir -p build/repo/noarch
+          find artifacts -type f \( -name "*.tar.bz2" -o -name "*.conda" \) | while read -r file; do
+            case "$(basename "$file")" in
+              *linux[-_]64*) platform=linux-64 ;;
+              *win[-_]64*) platform=win-64 ;;
+              *osx[-_]arm64*) platform=osx-arm64 ;;
+              *) platform=noarch ;;
+            esac
+            mkdir -p "build/repo/$platform"
+            mv "$file" "build/repo/$platform/"
+          done
 
       - name: Generate repodata
         shell: bash -el {0}
