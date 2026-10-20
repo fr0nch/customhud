@@ -905,6 +905,26 @@ declare module ":s2sdk" {
     NoMapChange = 2
   }
 
+  /** Enum representing the client's connection (signon) state. */
+  export const enum SignonState {
+    /** No state yet, about to connect. */
+    None = 0,
+    /** Client is challenging the server, all OOB packets. */
+    Challenge = 1,
+    /** Client is connected to the server, netchans ready. */
+    Connected = 2,
+    /** Just got server info and string tables. */
+    New = 3,
+    /** Received signon buffers. */
+    Prespawn = 4,
+    /** Ready to receive entity packets. */
+    Spawn = 5,
+    /** Fully connected, first non-delta packet received. */
+    Full = 6,
+    /** Server is changing level. */
+    ChangeLevel = 7
+  }
+
   /** Enum representing the possible reasons for a round ending in Counter-Strike. */
   export const enum CSRoundEndReason {
     /** Target successfully bombed. */
@@ -1121,26 +1141,23 @@ declare module ":s2sdk" {
   /** This function is invoked when a timer event occurs. It handles the timer-related logic and performs necessary actions based on the event. */
   export type TimerCallback = (timer: number, userData: any[]) => void;
 
-  /** Called on client connection. If you return true, the client will be allowed in the server. If you return false (or return nothing), the client will be rejected. If the client is rejected by this forward or any other, OnClientDisconnect will not be called.<br>Note: Do not write to rejectmsg if you plan on returning true. If multiple plugins write to the string buffer, it is not defined which plugin's string will be shown to the client, but it is guaranteed one of them will. */
-  export type OnClientConnectCallback = (playerSlot: number, name: string, networkId: string) => boolean;
+  /** Called when a client attempts to connect, before a player slot is allocated. Return a disconnect reason other than NETWORK_DISCONNECT_INVALID to reject the connection with it: the client is not created, so no player_connect event, OnClientConnected or OnClientDisconnect will follow. Also called for bots (from CreateFakeClient) with the server's local address and a steamId of 0; rejecting a bot means it is not created. Not called for GOTV. */
+  export type OnClientConnectCallback = (name: string, address: string, steamId: bigint) => NetworkDisconnectionReason;
 
-  /** Called on client connection. */
-  export type OnClientConnect_PostCallback = (playerSlot: number) => void;
-
-  /** Called once a client successfully connects. This callback is paired with OnClientDisconnect. */
+  /** Called once a client has connected and got a player slot, for players (after OnClientConnect accepted them) and bots alike, right after the player_connect event and before OnClientPutInServer. This callback is paired with OnClientDisconnect. */
   export type OnClientConnectedCallback = (playerSlot: number) => void;
 
   /** Called when a client is entering the game. */
   export type OnClientPutInServerCallback = (playerSlot: number) => void;
 
-  /** Called when a client is disconnecting from the server. */
-  export type OnClientDisconnectCallback = (playerSlot: number) => void;
-
-  /** Called when a client is disconnected from the server. */
-  export type OnClientDisconnect_PostCallback = (playerSlot: number, reason: NetworkDisconnectionReason) => void;
+  /** Called when a client is disconnecting from the server, for players and bots, before the player_disconnect event. The client data is still available here and is reset once the callbacks return. */
+  export type OnClientDisconnectCallback = (playerSlot: number, reason: NetworkDisconnectionReason) => void;
 
   /** Called when a client is activated by the game. */
-  export type OnClientActiveCallback = (playerSlot: number, isActive: boolean) => void;
+  export type OnClientActiveCallback = (playerSlot: number, loadGame: boolean) => void;
+
+  /** Called when the server processes a client's signon state message (CServerSideClient::ProcessSignonStateMsg), with the client's current signon state. The same state may be reported more than once. Not called for bots. */
+  export type OnClientSignonStateChangedCallback = (playerSlot: number, state: SignonState, spawnCount: number) => void;
 
   /** Called when a client is fully connected to the game. */
   export type OnClientFullyConnectCallback = (playerSlot: number) => void;
@@ -1148,7 +1165,7 @@ declare module ":s2sdk" {
   /** Called whenever the client's settings are changed. */
   export type OnClientSettingsChangedCallback = (playerSlot: number) => void;
 
-  /** Called when a client is fully connected to the game. */
+  /** Called when a client receives an auth ID. */
   export type OnClientAuthenticatedCallback = (playerSlot: number, steamID: bigint) => void;
 
   /** Called right before a round terminates. */
@@ -1166,7 +1183,7 @@ declare module ":s2sdk" {
   /** When an entity is reparented to another entity. */
   export type OnEntityParentChangedCallback = (entityHandle: number, parentHandle: number) => void;
 
-  /** When entities is transmitted to another entities. */
+  /** When entities are transmitted to another entities. */
   export type OnServerCheckTransmitCallback = (checkTransmitInfoList: bigint[]) => void;
 
   /** Called on every server startup. */
@@ -3335,46 +3352,46 @@ declare module ":s2sdk" {
   export function ClearTransmitInfoAlwaysAll(info: bigint): void;
 
   /**
-   * Gets the count of target player slots.
+   * Gets the count of spawn groups loaded by the client.
    * @param info - Pointer to the CCheckTransmitInfo structure.
-   * @returns The number of target player slots, or 0 if the info pointer is null.
+   * @returns The number of loaded spawn groups, or 0 if the info pointer is null.
    */
-  export function GetTransmitInfoTargetSlotsCount(info: bigint): number;
+  export function GetTransmitInfoTargetSpawnGroupsCount(info: bigint): number;
 
   /**
-   * Gets a player slot value at a specific index in the target slots vector.
+   * Gets a spawn group handle at a specific index in the loaded spawn groups vector.
    * @param info - Pointer to the CCheckTransmitInfo structure.
-   * @param index - The index in the target slots vector.
-   * @returns The player slot value, or -1 if the index is invalid or info is null.
+   * @param index - The index in the loaded spawn groups vector.
+   * @returns The spawn group handle, or -1 if the index is invalid or info is null.
    */
-  export function GetTransmitInfoTargetSlot(info: bigint, index: number): number;
+  export function GetTransmitInfoTargetSpawnGroup(info: bigint, index: number): number;
 
   /**
-   * Adds a player slot to the target slots vector.
+   * Adds a spawn group handle to the loaded spawn groups vector.
    * @param info - Pointer to the CCheckTransmitInfo structure.
-   * @param playerSlot - The player slot value to add.
+   * @param spawnGroup - The spawn group handle to add.
    */
-  export function AddTransmitInfoTargetSlot(info: bigint, playerSlot: number): void;
+  export function AddTransmitInfoTargetSpawnGroup(info: bigint, spawnGroup: number): void;
 
   /**
-   * Removes a player slot from the target slots vector.
+   * Removes a spawn group handle from the loaded spawn groups vector.
    * @param info - Pointer to the CCheckTransmitInfo structure.
-   * @param index - Index within the target slots vector to remove.
+   * @param index - Index within the loaded spawn groups vector to remove.
    */
-  export function RemoveTransmitInfoTargetSlot(info: bigint, index: number): void;
+  export function RemoveTransmitInfoTargetSpawnGroup(info: bigint, index: number): void;
 
   /**
-   * Gets the target slots vector.
+   * Gets the loaded spawn groups vector.
    * @param info - Pointer to the CCheckTransmitInfo structure.
-   * @returns The player slots array.
+   * @returns The spawn group handles array.
    */
-  export function GetTransmitInfoTargetSlotsAll(info: bigint): number[];
+  export function GetTransmitInfoTargetSpawnGroupsAll(info: bigint): number[];
 
   /**
-   * Clears all target player slots from the vector.
+   * Clears all spawn groups from the loaded spawn groups vector.
    * @param info - Pointer to the CCheckTransmitInfo structure.
    */
-  export function RemoveTransmitInfoTargetSlotsAll(info: bigint): void;
+  export function RemoveTransmitInfoTargetSpawnGroupsAll(info: bigint): void;
 
   /**
    * Gets the player slot value from the CCheckTransmitInfo.
@@ -3606,26 +3623,26 @@ declare module ":s2sdk" {
   /**
    * Retrieves a client's IP address.
    * @param playerSlot - The index of the player's slot.
-   * @returns The client's IP address.
+   * @returns The client's IP address, or the local (loopback) address for bots.
    */
   export function GetClientIp(playerSlot: number): string;
 
   /**
-   * Retrieves a client's language.
+   * Retrieves a client's language. Empty until the client answers the cl_language query, and always empty for bots. Reliably available starting from OnClientAuthenticated and OnClientPutInServer.
    * @param playerSlot - The index of the player's slot.
    * @returns The client's language.
    */
   export function GetClientLanguage(playerSlot: number): string;
 
   /**
-   * Retrieves a client's language as an ISO code. Unlike GetClientLanguage, which returns the raw cl_language value ("english", "schinese"), this returns the code translation files are keyed by ("en", "zh-CN"). Falls back to the server language when the client's language is not known.
+   * Retrieves a client's language as an ISO code. Unlike GetClientLanguage, which returns the raw cl_language value ("english", "schinese"), this returns the code translation files are keyed by ("en", "zh-CN"). Empty until the client answers the cl_language query, and always empty for bots. Reliably available starting from OnClientAuthenticated and OnClientPutInServer.
    * @param playerSlot - The index of the player's slot.
    * @returns The client's ISO language code.
    */
   export function GetClientLanguageCode(playerSlot: number): string;
 
   /**
-   * Retrieves a client's operating system.
+   * Retrieves a client's operating system. Empty until the client answers the engine_ostype query, and always empty for bots. Reliably available starting from OnClientAuthenticated and OnClientPutInServer.
    * @param playerSlot - The index of the player's slot.
    * @returns The client's operating system.
    */
@@ -5437,9 +5454,10 @@ declare module ":s2sdk" {
   /**
    * Returns the duration of a specified sound.
    * @param name - The name of the sound to check.
+   * @param actorModel - The name of the sound to check.
    * @returns The duration of the sound in seconds.
    */
-  export function GetSoundDuration(name: string): number;
+  export function GetSoundDuration(name: string, actorModel: string): number;
 
   /**
    * Emits a sound from a specified entity.
@@ -5594,13 +5612,12 @@ declare module ":s2sdk" {
 
   /**
    * Finds the nearest entity by classname to a point.
-   * @param startFrom - The handle of the entity to start from, or INVALID_EHANDLE_INDEX to start fresh.
    * @param classname - The class name to search for.
    * @param origin - The center point to search around.
    * @param maxRadius - Maximum search radius.
    * @returns The handle of the found entity, or INVALID_EHANDLE_INDEX if none found.
    */
-  export function FindEntityByClassnameNearest(startFrom: number, classname: string, origin: Vector3, maxRadius: number): number;
+  export function FindEntityByClassnameNearest(classname: string, origin: Vector3, maxRadius: number): number;
 
   /**
    * Finds an entity by classname within a radius with iteration.
@@ -6558,9 +6575,9 @@ declare module ":s2sdk" {
    * Sets the player controller address of a game event's key.
    * @param event - A pointer to the IGameEvent object containing event data.
    * @param key - The key for which to set the player controller address.
-   * @param value - A pointer to the player controller to set.
+   * @param value - A handle to the player controller to set.
    */
-  export function SetEventPlayerController(event: bigint, key: string, value: bigint): void;
+  export function SetEventPlayerController(event: bigint, key: string, value: number): void;
 
   /**
    * Sets the player index value of a game event's key.
@@ -6582,9 +6599,9 @@ declare module ":s2sdk" {
    * Sets the entity address of a game event's key.
    * @param event - A pointer to the IGameEvent object containing event data.
    * @param key - The key for which to set the entity address.
-   * @param value - A pointer to the entity to set.
+   * @param value - A handle to the entity to set.
    */
-  export function SetEventEntity(event: bigint, key: string, value: bigint): void;
+  export function SetEventEntity(event: bigint, key: string, value: number): void;
 
   /**
    * Sets the entity index of a game event's key.
@@ -8306,18 +8323,6 @@ declare module ":s2sdk" {
    * Register callback to event.
    * @param callback - Function callback.
    */
-  export function OnClientConnect_Post_Register(callback: OnClientConnect_PostCallback): void;
-
-  /**
-   * Unregister callback to event.
-   * @param callback - Function callback.
-   */
-  export function OnClientConnect_Post_Unregister(callback: OnClientConnect_PostCallback): void;
-
-  /**
-   * Register callback to event.
-   * @param callback - Function callback.
-   */
   export function OnClientConnected_Register(callback: OnClientConnectedCallback): void;
 
   /**
@@ -8354,18 +8359,6 @@ declare module ":s2sdk" {
    * Register callback to event.
    * @param callback - Function callback.
    */
-  export function OnClientDisconnect_Post_Register(callback: OnClientDisconnect_PostCallback): void;
-
-  /**
-   * Unregister callback to event.
-   * @param callback - Function callback.
-   */
-  export function OnClientDisconnect_Post_Unregister(callback: OnClientDisconnect_PostCallback): void;
-
-  /**
-   * Register callback to event.
-   * @param callback - Function callback.
-   */
   export function OnClientActive_Register(callback: OnClientActiveCallback): void;
 
   /**
@@ -8373,6 +8366,18 @@ declare module ":s2sdk" {
    * @param callback - Function callback.
    */
   export function OnClientActive_Unregister(callback: OnClientActiveCallback): void;
+
+  /**
+   * Register callback to event.
+   * @param callback - Function callback.
+   */
+  export function OnClientSignonStateChanged_Register(callback: OnClientSignonStateChangedCallback): void;
+
+  /**
+   * Unregister callback to event.
+   * @param callback - Function callback.
+   */
+  export function OnClientSignonStateChanged_Unregister(callback: OnClientSignonStateChangedCallback): void;
 
   /**
    * Register callback to event.
@@ -12274,9 +12279,9 @@ declare module ":s2sdk" {
     /**
      * Sets the player controller address of a game event's key.
      * @param key - The key for which to set the player controller address.
-     * @param value - A pointer to the player controller to set.
+     * @param value - A handle to the player controller to set.
      */
-    SetPlayerController(key: string, value: bigint): void;
+    SetPlayerController(key: string, value: number): void;
 
     /**
      * Sets the player index value of a game event's key.
@@ -12295,9 +12300,9 @@ declare module ":s2sdk" {
     /**
      * Sets the entity address of a game event's key.
      * @param key - The key for which to set the entity address.
-     * @param value - A pointer to the entity to set.
+     * @param value - A handle to the entity to set.
      */
-    SetEntity(key: string, value: bigint): void;
+    SetEntity(key: string, value: number): void;
 
     /**
      * Sets the entity index of a game event's key.
@@ -12470,38 +12475,38 @@ declare module ":s2sdk" {
     ClearHLTVAll(): void;
 
     /**
-     * Gets the count of target player slots.
-     * @returns The number of target player slots, or 0 if the info pointer is null.
+     * Gets the count of spawn groups loaded by the client.
+     * @returns The number of loaded spawn groups, or 0 if the info pointer is null.
      */
     GetTargetSlotsCount(): number;
 
     /**
-     * Gets a player slot value at a specific index in the target slots vector.
-     * @param index - The index in the target slots vector.
-     * @returns The player slot value, or -1 if the index is invalid or info is null.
+     * Gets a spawn group handle at a specific index in the loaded spawn groups vector.
+     * @param index - The index in the loaded spawn groups vector.
+     * @returns The spawn group handle, or -1 if the index is invalid or info is null.
      */
     GetTargetSlot(index: number): number;
 
     /**
-     * Adds a player slot to the target slots vector.
-     * @param playerSlot - The player slot value to add.
+     * Adds a spawn group handle to the loaded spawn groups vector.
+     * @param spawnGroup - The spawn group handle to add.
      */
-    AddTargetSlot(playerSlot: number): void;
+    AddTargetSlot(spawnGroup: number): void;
 
     /**
-     * Removes a player slot from the target slots vector.
-     * @param index - Index within the target slots vector to remove.
+     * Removes a spawn group handle from the loaded spawn groups vector.
+     * @param index - Index within the loaded spawn groups vector to remove.
      */
     RemoveTargetSlot(index: number): void;
 
     /**
-     * Gets the target slots vector.
-     * @returns The player slots array.
+     * Gets the loaded spawn groups vector.
+     * @returns The spawn group handles array.
      */
     GetTargetSlotsAll(): number[];
 
     /**
-     * Clears all target player slots from the vector.
+     * Clears all spawn groups from the loaded spawn groups vector.
      */
     RemoveTargetSlotsAll(): void;
 

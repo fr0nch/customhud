@@ -11,7 +11,7 @@ This plugin takes care of that for you: it creates the hud through `s2sdk`, trac
 
 ## Requirements
 
-- [Source 2 SDK](https://github.com/untrustedmodders/plugify) plugin 2.18.0 or newer
+- [Source 2 SDK](https://github.com/untrustedmodders/plugify) plugin 3.0.0 or newer
 - [V8 language module for JavaScript](https://github.com/untrustedmodders/plugify)
 
 ## Usage
