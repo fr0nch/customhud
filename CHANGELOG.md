@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/fr0nch/customhud/compare/v1.0.1...v1.0.2) (2026-10-20)
+
+
+### Bug Fixes
+
+* require `s2sdk` 3.0.0 and update typings ([0eabc5b](https://github.com/fr0nch/customhud/commit/0eabc5b8bf93ba3968a4c5e278ef89785c5dd022))
+
 ## [1.0.1](https://github.com/fr0nch/customhud/compare/v1.0.0...v1.0.1) (2026-10-17)
 
 
