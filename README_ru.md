@@ -13,8 +13,8 @@
 
 ## Требования
 
-- Плагин [Source 2 SDK](https://github.com/untrustedmodders/plugify) версии 3.0.0 или новее
-- Языковой модуль [V8 для JavaScript](https://github.com/untrustedmodders/plugify)
+- Плагин [Source 2 SDK](https://github.com/untrustedmodders/plugify-plugin-s2sdk) версии 3.0.0 или новее
+- Языковой модуль [V8 для JavaScript](https://github.com/untrustedmodders/plugify-module-v8)
 
 ## Использование
 
