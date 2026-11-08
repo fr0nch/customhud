@@ -5,6 +5,7 @@ const pluginTag = "CustomHud";
 const LOOKUP_SCRIPT_INPUT = 'customhud_lookup';
 
 let instance = null; // cs_script Instance, null until CS Script is ready
+let importRequest = null; // pending point_script import of the current map
 let lookupResult; // entity passed to the last LOOKUP_SCRIPT_INPUT
 const layouts = new Map(); // hud handle (s2sdk) -> cs_script CustomHudLayout
 const hudClickListeners = new Set();
@@ -18,9 +19,18 @@ function notify(listenerName, callback, ...args) {
 	}
 }
 
-function importCsScript() {
+function importCsScript(request) {
+	if (request !== importRequest || s2sdk.GetPointScriptHandle() !== request.pointScript) {
+		return; // queued before a map change or for a point_script that is gone
+	}
+
 	import('cs_script/point_script')
 		.then((point_script) => {
+			if (request !== importRequest || s2sdk.GetPointScriptHandle() !== request.pointScript) {
+				return;
+			}
+
+			importRequest = null;
 			instance = point_script.Instance;
 			console.log(`[${pluginTag}] CS Script connected successfully.`);
 
@@ -44,20 +54,28 @@ function importCsScript() {
 			}
 		})
 		.catch((err) => {
+			if (request !== importRequest) {
+				return;
+			}
+
+			importRequest = null;
 			console.log(`[${pluginTag}] CS Script isn't available: ${err}`);
 		});
 }
 
 function onEntitySpawned(entityHandle) {
-	if (instance || entityHandle !== s2sdk.GetPointScriptHandle()) {
+	if (instance || importRequest || entityHandle !== s2sdk.GetPointScriptHandle()) {
 		return;
 	}
 
-	s2sdk.QueueTaskForNextFrame(importCsScript, []);
+	const request = { pointScript: entityHandle };
+	importRequest = request;
+	s2sdk.QueueTaskForNextFrame(() => importCsScript(request), []);
 }
 
 function onMapEnd() {
 	instance = null;
+	importRequest = null;
 	layouts.clear();
 }
 
