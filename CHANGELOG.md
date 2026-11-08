@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.3](https://github.com/fr0nch/customhud/compare/v1.0.2...v1.0.3) (2026-11-08)
+
+
+### Bug Fixes
+
+* import CS Script once per map ([959bae1](https://github.com/fr0nch/customhud/commit/959bae1b2ed829ba0c894886f31db4c628e32cab))
+* update point_script.d.ts ([4cfdb22](https://github.com/fr0nch/customhud/commit/4cfdb229b120452f99318a97afa9a5a9aec99ee1))
+
 ## [1.0.2](https://github.com/fr0nch/customhud/compare/v1.0.1...v1.0.2) (2026-10-20)
 
 
