@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/fr0nch/customhud/compare/v1.0.3...v1.1.0) (2026-11-20)
+
+
+### Features
+
+* add observable huds, dialog variable getter and per-player hide/show ([246d7d1](https://github.com/fr0nch/customhud/commit/246d7d1c237f37b9dea29fc75f0a7dc25f1b61f1))
+
 ## [1.0.3](https://github.com/fr0nch/customhud/compare/v1.0.2...v1.0.3) (2026-11-08)
 
 
