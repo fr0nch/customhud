@@ -22,7 +22,7 @@
 // Из любого плагина на Plugify. Всё ниже требует cs_script, поэтому всё
 // внутри OnCsScriptReady_Register. Если он уже готов, сработает сразу.
 OnCsScriptReady_Register(() => {
-	const hud = CreateCustomHud('main_hud', 'panorama/layout/custom_game/main_hud.vxml');
+	const hud = CreateCustomHud('main_hud', 'panorama/layout/custom_game/main_hud.xml');
 
 	// Задать класс для всех игроков:
 	SetHudHasClass(hud, 'dialog', 'Dismissed', false);
@@ -46,9 +46,12 @@ OnHudClicked_Register((playerSlot, hud, buttonId) => {
 | `OnCsScriptReady_Register(callback)` | Подписка на готовность `cs_script`. Если он уже готов, сработает сразу при регистрации. |
 | `OnCsScriptReady_Unregister(callback)` | Отписка. |
 | `CreateCustomHud(name, layoutResource)` | Создаёт худ и возвращает его хэндл (`-1` при ошибке). Все остальные методы принимают этот хэндл. Он действует, пока худ не удалён и карта не сменилась. Имя не обязано быть уникальным. |
+| `CreateObservableCustomHud(name, layoutResource)` | То же, что `CreateCustomHud`, но значения игроков получают все, поэтому наблюдатель видит худ того, за кем следит (без курсора). |
 | `FindCustomHud(name)` | Возвращает хэндл первого худа с таким именем, например поставленного на карту (`-1`, если не найден). |
 | `RemoveCustomHud(hud)` | Удаляет худ. |
-| `HideCustomHudFromOtherPlayers(hud, playerSlot)` | Прячет худ от всех, кроме `playerSlot`. |
+| `HideCustomHudFromOtherPlayers(hud, playerSlot)` | Перестаёт отправлять худ всем, кроме `playerSlot`. См. заметку про скрытие ниже. |
+| `HideCustomHud(hud, playerSlot)` | Перестаёт отправлять худ одному игроку до `ShowCustomHud`. См. заметку про скрытие ниже. |
+| `ShowCustomHud(hud, playerSlot)` | Снова отправляет худ игроку после `HideCustomHud` или `HideCustomHudFromOtherPlayers`. |
 | `SetHudHasClass(hud, panelId, className, hasClass)` | Добавляет/убирает CSS-класс панели, у всех игроков. |
 | `ResetHudHasClass(hud, panelId, className)` | Возвращает класс панели к исходному значению из макета, у всех игроков. |
 | `SetHudHasClassForPlayer(hud, playerSlot, panelId, className, hasClass)` | То же самое, но только для одного игрока. |
@@ -58,6 +61,7 @@ OnHudClicked_Register((playerSlot, hud, buttonId) => {
 | `SetHudDialogVariable(hud, panelId, variableName, value)` | Задаёт переменную панели, у всех игроков. |
 | `SetHudDialogVariableForPlayer(hud, playerSlot, panelId, variableName, value)` | То же самое, но только для одного игрока. |
 | `ResetHudDialogVariableForPlayer(hud, playerSlot, panelId, variableName)` | Убирает значение переменной у одного игрока, чтобы снова действовало общее. |
+| `GetHudDialogVariable(hud, playerSlot, panelId, variableName)` | Значение переменной для игрока. Берётся значение игрока, если оно задано, иначе общее (`-1` читает только общее). Пустая строка, если не задано. |
 | `SetHudInputCapture(hud, playerSlot, enabled)` | Включает/выключает курсор и клики для игрока. |
 | `IsHudInputCaptureEnabled(hud, playerSlot)` | Захвачен ли сейчас ввод игрока. |
 | `ResetHud(hud)` | Сбрасывает худ в исходное состояние для всех игроков. |
@@ -68,6 +72,12 @@ OnHudClicked_Register((playerSlot, hud, buttonId) => {
 ## Важно
 
 - Худ не переживает смену карты на новой карте нужно вызвать `CreateCustomHud` заново.
+- Передавайте имя макета с исходным расширением: `panorama/layout/custom_game/main_hud.xml`. С `.vxml` клиент пишет `Layout xml is an invalid resource name` и ничего не рисует.
+- Макет из своего аддона должен быть в манифесте сессии: в `OnBuildGameSessionManifest` вызовите `Precache` с собранными именами `panorama/layout/custom_game/main_hud.vxml` и `panorama/styles/custom_game/main_hud.vcss`.
+- Значения для одного игрока (`...ForPlayer`) получает только этот игрок. Observable-худ отправляет их всем.
+- Скрытие (`HideCustomHud`, `HideCustomHudFromOtherPlayers`) действует только на игроков, которые ещё не получили худ, поэтому вызывайте его в том же тике, что и `CreateCustomHud`. Худ, уже показанный игроку, остаётся на экране и просто перестаёт обновляться до `ShowCustomHud`. s2sdk сбрасывает все скрытия на старте раунда, после него худ нужно скрыть снова.
+- Сервер не проверяет захват ввода, когда приходит клик, поэтому изменённый клиент может прислать любой `buttonId`. Проверяйте `buttonId` и состояние игрока на сервере.
+- В значении переменной `#Токен` и имя токена без `#` (`SFUI_WPNHUD_AK47`) переводятся на язык игрока. `{g:csgo_key:var}` в тексте метки превращает `%+use%` из значения в клавишу игрока. `{g:player_name:var}` со значением от сервера не работает: всегда показывает игрока из слота 0 и выводит HTML.
 - Официальная документация Valve по `CustomHudLayout` в [`pps/point_script.d.ts`](pps/point_script.d.ts).
 
 ## Лицензия

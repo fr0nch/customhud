@@ -124,6 +124,30 @@
 			"group": "CustomHudLayout"
 		},
 		{
+			"name": "CreateObservableCustomHud",
+			"description": "Same as CreateCustomHud, but the hud is observable: every player receives the per-player state of all players, and a spectator sees the hud of the player being observed (without a cursor). A regular hud sends per-player state only to that player.",
+			"funcName": "CreateObservableCustomHud",
+			"paramTypes": [
+				{
+					"name": "name",
+					"type": "string",
+					"ref": false,
+					"description": "Name (targetname) of the hud. Does not have to be unique."
+				},
+				{
+					"name": "layoutResource",
+					"type": "string",
+					"ref": false,
+					"description": "Path to the Panorama layout (.xml), declared as a resource in the session manifest."
+				}
+			],
+			"retType": {
+				"type": "int32",
+				"description": "Hud handle, or -1 if the hud could not be created."
+			},
+			"group": "CustomHudLayout"
+		},
+		{
 			"name": "FindCustomHud",
 			"description": "Gets the handle of the first hud with this name (targetname), such as a hud placed on the map.",
 			"funcName": "FindCustomHud",
@@ -161,7 +185,7 @@
 		},
 		{
 			"name": "HideCustomHudFromOtherPlayers",
-			"description": "Hides the hud entity from all players except the owner, at the transmit/PVS level. A stronger guarantee than a CSS class, which only hides the panel on clients the entity is still transmitted to. (s2sdk.HideTransmitEntityFromOtherPlayers)",
+			"description": "Hides the hud entity from all players except the owner, at the transmit level. Works only for players who haven't received the hud yet, so call it in the same tick as CreateCustomHud; a hud already on a player's screen stays there and stops updating. s2sdk clears every hide on round start. (s2sdk.HideTransmitEntityFromOtherPlayers)",
 			"funcName": "HideCustomHudFromOtherPlayers",
 			"paramTypes": [
 				{
@@ -175,6 +199,54 @@
 					"type": "int32",
 					"ref": false,
 					"description": "The owner player slot who will still see the entity."
+				}
+			],
+			"retType": {
+				"type": "bool",
+				"description": "False if the handle isn't a hud."
+			},
+			"group": "CustomHudLayout"
+		},
+		{
+			"name": "HideCustomHud",
+			"description": "Stops transmitting the hud entity to one player until ShowCustomHud. Works only if the player hasn't received the hud yet, so call it in the same tick as CreateCustomHud; a hud already on the player's screen stays there and stops updating. s2sdk clears every hide on round start. (s2sdk.HideTransmitEntity)",
+			"funcName": "HideCustomHud",
+			"paramTypes": [
+				{
+					"name": "hud",
+					"type": "int32",
+					"ref": false,
+					"description": "Hud handle from CreateCustomHud or FindCustomHud."
+				},
+				{
+					"name": "playerSlot",
+					"type": "int32",
+					"ref": false,
+					"description": "The player who stops receiving the hud."
+				}
+			],
+			"retType": {
+				"type": "bool",
+				"description": "False if the handle isn't a hud."
+			},
+			"group": "CustomHudLayout"
+		},
+		{
+			"name": "ShowCustomHud",
+			"description": "Transmits the hud entity to a player again after HideCustomHud or HideCustomHudFromOtherPlayers; a frozen hud starts updating again. (s2sdk.ShowTransmitEntity)",
+			"funcName": "ShowCustomHud",
+			"paramTypes": [
+				{
+					"name": "hud",
+					"type": "int32",
+					"ref": false,
+					"description": "Hud handle from CreateCustomHud or FindCustomHud."
+				},
+				{
+					"name": "playerSlot",
+					"type": "int32",
+					"ref": false,
+					"description": "The player who receives the hud again."
 				}
 			],
 			"retType": {
@@ -510,6 +582,42 @@
 			"retType": {
 				"type": "bool",
 				"description": "False if the handle isn't a hud, CS Script isn't ready or the call failed."
+			},
+			"group": "CustomHudLayout"
+		},
+		{
+			"name": "GetHudDialogVariable",
+			"description": "Gets the value of a dialog variable for a player. The player value is used if set, otherwise the all player value. Only values set from the server are known; variables set by the layout itself are not reported.",
+			"funcName": "GetHudDialogVariable",
+			"paramTypes": [
+				{
+					"name": "hud",
+					"type": "int32",
+					"ref": false,
+					"description": "Hud handle from CreateCustomHud or FindCustomHud."
+				},
+				{
+					"name": "playerSlot",
+					"type": "int32",
+					"ref": false,
+					"description": "Player slot, or -1 for the all player value."
+				},
+				{
+					"name": "panelId",
+					"type": "string",
+					"ref": false,
+					"description": "The panel's id attribute in the layout."
+				},
+				{
+					"name": "variableName",
+					"type": "string",
+					"ref": false,
+					"description": "Dialog variable name, without braces."
+				}
+			],
+			"retType": {
+				"type": "string",
+				"description": "The value, or an empty string if it isn't set or the handle isn't a hud."
 			},
 			"group": "CustomHudLayout"
 		},

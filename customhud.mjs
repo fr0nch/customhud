@@ -158,22 +158,34 @@ const STATE_CLASS = 'CCSCustomHudLayoutState';
 const CLASS_STATUS_UNDEFINED = -1;
 const CLASS_STATUS_HAS_CLASS = 1;
 
-let hasClassOffsets = null; // HUDPanelHasClass_t field offsets, null if the schema is missing a field
+const DIALOG_VARIABLE_CLASS = 'HUDPanelDialogVariableString_t';
 
-function onServerActivate() {
-	const offsets = {
-		panelIdIndex: s2sdk.GetSchemaOffset('HUDPanelHasClass_t', 'm_nPanelIdIndex'),
-		classNameIndex: s2sdk.GetSchemaOffset('HUDPanelHasClass_t', 'm_nClassNameIndex'),
-		classStatus: s2sdk.GetSchemaOffset('HUDPanelHasClass_t', 'm_eClassStatus'),
-	};
+let hasClassOffsets = null; // HUDPanelHasClass_t field offsets, null if the schema is missing a field
+let dialogVariableOffsets = null; // HUDPanelDialogVariableString_t field offsets, null if the schema is missing a field
+
+function schemaOffsets(className, members) {
+	const offsets = Object.fromEntries(
+		Object.entries(members).map(([key, member]) => [key, s2sdk.GetSchemaOffset(className, member)]));
 
 	if (Object.values(offsets).some((offset) => offset < 0)) {
-		console.log(`[${pluginTag}] HUDPanelHasClass_t schema is missing expected fields: ${JSON.stringify(offsets)}`);
-		hasClassOffsets = null;
-		return;
+		console.log(`[${pluginTag}] ${className} schema is missing expected fields: ${JSON.stringify(offsets)}`);
+		return null;
 	}
 
-	hasClassOffsets = offsets;
+	return offsets;
+}
+
+function onServerActivate() {
+	hasClassOffsets = schemaOffsets('HUDPanelHasClass_t', {
+		panelIdIndex: 'm_nPanelIdIndex',
+		classNameIndex: 'm_nClassNameIndex',
+		classStatus: 'm_eClassStatus',
+	});
+	dialogVariableOffsets = schemaOffsets(DIALOG_VARIABLE_CLASS, {
+		panelIdIndex: 'm_nPanelIdIndex',
+		variableIndex: 'm_nDialogVariableIndex',
+		isSet: 'm_bIsSet',
+	});
 }
 
 function indexOfName(entity, memberName, name) {
@@ -203,6 +215,26 @@ function classStatus(state, panelIndex, classIndex) {
 }
 
 /**
+ * The value of a dialog variable in a state, or undefined if the state doesn't set it.
+ */
+function dialogVariableValue(state, panelIndex, variableIndex) {
+	const count = state === 0n ? 0 : s2sdk.GetEntSchemaArraySize2(state, STATE_CLASS, 'm_vecDialogVariableStrings');
+	for (let i = 0; i < count; i++) {
+		const entry = s2sdk.GetEntSchemaPtr2(state, STATE_CLASS, 'm_vecDialogVariableStrings', i);
+		const read = (offset, size) => Number(s2sdk.GetEntData2(entry, offset, size));
+
+		if ((read(dialogVariableOffsets.panelIdIndex, 2) & 0xFFFF) === panelIndex
+			&& (read(dialogVariableOffsets.variableIndex, 2) & 0xFFFF) === variableIndex) {
+			return (read(dialogVariableOffsets.isSet, 1) & 0xFF) !== 0
+				? s2sdk.GetEntSchemaString2(entry, DIALOG_VARIABLE_CLASS, 'm_sValue', 0)
+				: undefined;
+		}
+	}
+
+	return undefined;
+}
+
+/**
  * Get if CS Script is ready.
  */
 export const IsCsScriptReady = () => instance !== null;
@@ -222,14 +254,10 @@ export const OnCsScriptReady_Unregister = (callback) => {
 	csScriptReadyListeners.delete(callback);
 };
 
-/**
- * Create a hud and get its handle, or -1 if it could not be created.
- * The handle stays valid until the hud is removed or the map changes. The name does not have to be unique.
- */
-export const CreateCustomHud = (name, layoutResource) => {
+function createHud(methodName, name, layoutResource, observable) {
 	// An empty string value crashes DispatchSpawn2 in s2sdk.
 	if (layoutResource === '') {
-		console.log(`[${pluginTag}] CreateCustomHud: layoutResource is empty.`);
+		console.log(`[${pluginTag}] ${methodName}: layoutResource is empty.`);
 		return -1;
 	}
 
@@ -238,14 +266,34 @@ export const CreateCustomHud = (name, layoutResource) => {
 		return -1;
 	}
 
-	if (name === '') {
-		s2sdk.DispatchSpawn2(hud, ['layout'], [layoutResource]);
-	} else {
-		s2sdk.DispatchSpawn2(hud, ['targetname', 'layout'], [name, layoutResource]);
+	const keys = ['layout'];
+	const values = [layoutResource];
+	if (name !== '') {
+		keys.push('targetname');
+		values.push(name);
 	}
+	if (observable) {
+		keys.push('observable');
+		values.push('1');
+	}
+	s2sdk.DispatchSpawn2(hud, keys, values);
 
 	return hud;
-};
+}
+
+/**
+ * Create a hud and get its handle, or -1 if it could not be created.
+ * The handle stays valid until the hud is removed or the map changes. The name does not have to be unique.
+ */
+export const CreateCustomHud = (name, layoutResource) =>
+	createHud('CreateCustomHud', name, layoutResource, false);
+
+/**
+ * Same as CreateCustomHud, but every player receives the per-player state of all players,
+ * so a spectator sees the hud of the player being observed (without a cursor).
+ */
+export const CreateObservableCustomHud = (name, layoutResource) =>
+	createHud('CreateObservableCustomHud', name, layoutResource, true);
 
 /**
  * Get the handle of the first hud with this name, or -1.
@@ -280,6 +328,34 @@ export const HideCustomHudFromOtherPlayers = (hud, playerSlot) => {
 	}
 
 	s2sdk.HideTransmitEntityFromOtherPlayers(playerSlot, hud);
+
+	return true;
+};
+
+/**
+ * Stop transmitting the hud to one player until ShowCustomHud. Only hides a hud the player hasn't received yet,
+ * so call it in the same tick as CreateCustomHud: a hud already on the player's screen stays there and stops updating.
+ * s2sdk clears every hide on round start.
+ */
+export const HideCustomHud = (hud, playerSlot) => {
+	if (!isHud(hud)) {
+		return false;
+	}
+
+	s2sdk.HideTransmitEntity(playerSlot, hud);
+
+	return true;
+};
+
+/**
+ * Transmit the hud to a player again after HideCustomHud or HideCustomHudFromOtherPlayers. A frozen hud updates again.
+ */
+export const ShowCustomHud = (hud, playerSlot) => {
+	if (!isHud(hud)) {
+		return false;
+	}
+
+	s2sdk.ShowTransmitEntity(playerSlot, hud);
 
 	return true;
 };
@@ -348,6 +424,37 @@ export const ToggleClass = (hud, playerSlot, panelId, className) => {
 	return playerSlot === -1
 		? SetHudHasClass(hud, panelId, className, hasClass)
 		: SetHudHasClassForPlayer(hud, playerSlot, panelId, className, hasClass);
+};
+
+/**
+ * Get the value of a dialog variable for a player: the player value if set, otherwise the all player value.
+ * Pass -1 for `playerSlot` to read the all player value only. Returns an empty string if the variable isn't set.
+ */
+export const GetHudDialogVariable = (hud, playerSlot, panelId, variableName) => {
+	if (!dialogVariableOffsets || !isHud(hud)) {
+		return '';
+	}
+
+	const entity = s2sdk.EntHandleToEntPointer(hud);
+
+	const panelIndex = indexOfName(entity, 'm_vecPanelIds', panelId);
+	const variableIndex = indexOfName(entity, 'm_vecDialogVariableNames', variableName);
+	if (panelIndex === -1 || variableIndex === -1) {
+		return '';
+	}
+
+	let value;
+	if (playerSlot !== -1) {
+		const playerState = s2sdk.GetEntSchemaPtr2(entity, LAYOUT_CLASS, 'm_vecPlayerLayoutStates', playerSlot);
+		value = dialogVariableValue(playerState, panelIndex, variableIndex);
+	}
+
+	if (value === undefined) {
+		const globalState = s2sdk.GetEntSchemaPtr2(entity, LAYOUT_CLASS, 'm_globalLayoutState', 0);
+		value = dialogVariableValue(globalState, panelIndex, variableIndex);
+	}
+
+	return value ?? '';
 };
 
 /**
