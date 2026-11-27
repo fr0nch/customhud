@@ -115,18 +115,26 @@ function getEntityByHandle(handle) {
 
 /**
  * Cached by handle, so clicks can be mapped back to the hud.
+ * A cached layout is checked with IsValid() only: isHud() costs two s2sdk calls, which is most of a call's time.
+ * The handle carries the entity serial, so a new entity at the same index never matches a stale entry.
  */
 function getLayout(hud) {
+	const cached = layouts.get(hud);
+	if (cached) {
+		if (cached.IsValid()) {
+			return cached;
+		}
+
+		layouts.delete(hud);
+	}
+
 	if (!isHud(hud)) {
 		return undefined;
 	}
 
-	let layout = layouts.get(hud);
-	if (!layout) {
-		layout = getEntityByHandle(hud);
-		if (layout) {
-			layouts.set(hud, layout);
-		}
+	const layout = getEntityByHandle(hud);
+	if (layout) {
+		layouts.set(hud, layout);
 	}
 
 	return layout;
