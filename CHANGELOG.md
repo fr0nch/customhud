@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/fr0nch/customhud/compare/v1.1.0...v1.1.1) (2026-11-27)
+
+
+### Performance Improvements
+
+* skip entity checks for cached huds ([dfebfdb](https://github.com/fr0nch/customhud/commit/dfebfdb6aaa41481dc6562779222e1c80adb8b31))
+
 ## [1.1.0](https://github.com/fr0nch/customhud/compare/v1.0.3...v1.1.0) (2026-11-20)
 
 
